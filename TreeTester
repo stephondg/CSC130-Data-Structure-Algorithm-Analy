@@ -1,0 +1,78 @@
+import java.util.Random;
+public class TreeTester
+{
+
+    public static void main(String[] args) throws Exception
+    {
+         testBST();
+         testAVL();
+         long startTime = System.nanoTime();
+         testBST();
+         long endTime = System.nanoTime();
+         long duration = ((endTime - startTime)/1000000);
+         System.out.println("The BST took " + duration + " milliseconds");
+         long startTimeA = System.nanoTime();
+         testAVL();
+         long endTimeA = System.nanoTime();
+         long durationA = ((endTimeA - startTimeA)/1000000);
+         System.out.println("The AVL took " + durationA + " milliseconds");
+         if (duration > durationA)
+            System.out.println("The BST was faster!");
+         else
+            System.out.println("The AVL was faster!");
+             }
+
+        private static void testBST()
+    {
+        BinarySearchTree<Integer> bst = new BinarySearchTree<>();
+
+
+        int min = 10;
+        int max = 100;
+
+        Random rand = new Random();
+
+        while(bst.height() < 5)
+        {
+            bst.insert(rand.nextInt(max - min) + min);
+            new TreePrinter(bst).print("BST");
+        }
+
+        while(!bst.isEmpty())
+        {
+            bst.remove(bst.getRoot().getData());
+            new TreePrinter(bst).print("Removing Root BST");
+        }
+    }
+
+    private static void testAVL() throws Exception
+    {
+        AVLTree<Integer> avl = new AVLTree<>(true);
+
+        int min = 10;
+        int max = 100;
+
+        Random rand = new Random();
+
+        for(int i = 0; i < 35; i++)
+        {
+            avl.insert(rand.nextInt(max - min) + min);
+            if(!avl.isBalanced())
+            {
+                throw new Exception("Tree is not balanced after insertion");
+            }
+            new TreePrinter(avl).print("AVL Tree");
+        }
+
+        while(!avl.isEmpty())
+        {
+            avl.remove(avl.getRoot().getData());
+            if(!avl.isBalanced())
+            {
+                throw new Exception("Tree is not balanced after removal");
+            }
+            new TreePrinter(avl).print("Removing Root AVL Tree");
+        }
+        
+    }
+}
