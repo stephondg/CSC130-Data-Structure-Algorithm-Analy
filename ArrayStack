@@ -1,0 +1,54 @@
+/*
+Stephon Grace
+Project 1
+ArrayStack
+*/  
+import java.util.EmptyStackException;
+
+public class ArrayStack implements DStack
+{
+    private double[] info;
+    private int size;
+    
+    public ArrayStack()
+    { 
+      this.info = new double[10];
+      this.size = 0;
+    }  
+    
+    public boolean isEmpty()
+    {
+      return this.size == 0;
+    }
+    
+    public void push(double n)
+    {
+      
+      if(this.size == this.info.length)
+      {
+         double[] tempArray = new double[this.size*2];
+         for(int j = 0; j < this.size; j++)
+            tempArray[j] = this.info[j];
+         this.info = tempArray;
+      }
+      this.info[this.size] = n;
+      this.size++;
+    }
+    
+    public double pop()
+    {
+      if(this.isEmpty())
+         throw new EmptyStackException();
+      double peekVal = this.peek();
+      size--;
+      return peekVal;
+    }
+    
+    public double peek()
+    {
+      if(this.isEmpty())
+         throw new EmptyStackException();
+      return this.info[this.size - 1];
+    }
+
+}
