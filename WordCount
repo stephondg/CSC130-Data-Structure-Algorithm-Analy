@@ -1,0 +1,188 @@
+/*Stephon Grace*/
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.function.BiConsumer;
+
+public class WordCount {
+    private static final int QUICK_SORT_CUTOFF = 15;
+
+    public static void main(String[] args) {
+        if(args.length != 3) {
+            System.out.println("Usage: [-b | -a | -h] [-is | -qs | -ms] <filename>\n");
+            System.out.println("-b - Use an Unbalanced BST");
+            System.out.println("-a - Use an AVL Tree");
+            System.out.println("-h - Use a Hashtable\n");
+            System.out.println("-is - Sorts using insertion sort");
+            System.out.println("-qs - Sorts using quick sort");
+            System.out.println("-ms - Sorts using merge sort");
+            return;
+        }
+
+        try {
+            switch(args[1]) {
+                case "-is":
+                    countWordFrequencies(countWords(args[0], args[2]), WordCount::insertionSort);
+                    break;
+                case "-qs":
+                    countWordFrequencies(countWords(args[0], args[2]), WordCount::quickSort);
+                    break;
+                case "-ms":
+                    countWordFrequencies(countWords(args[0], args[2]), WordCount::mergeSort);
+                    break;
+                default:
+                    System.out.println("Invalid choice for second argument");
+                    break;
+            }
+        } catch(IOException e) {
+            System.out.println("An error occurred when parsing the file!:");
+            System.out.println(e.getMessage());
+        }
+    }
+
+    
+    public static DataCount<String>[] countWords(String dataStructure, String filename) throws IOException {
+        FileWordReader fileWordReader = new FileWordReader(filename);
+        DataCounter<String> wordCounter;
+
+        switch(dataStructure) {
+            case "-b":
+                wordCounter = new BinarySearchTree<>();
+                break;
+            case "-a":
+                wordCounter = new AVLTree<>();
+                break;
+            case "-h":
+                wordCounter = new HashTable();
+                break;
+            default:
+                wordCounter = new BinarySearchTree<>();
+                System.out.println("Invalid data structure. Using BST by default.");
+                break;
+        }
+
+        String word;
+        while((word = fileWordReader.nextWord()) != null) {
+            wordCounter.incCount(word);
+        }
+
+        return wordCounter.getCounts();
+    }
+
+    
+    private static <E> void printWordCounts(DataCount<E>[] dataCounts) {
+        Arrays.stream(dataCounts)
+              .forEach(count -> {
+                  System.out.format("%d %s\n", count.count, count.data);
+              });
+    }
+
+   
+    private static void countWordFrequencies(DataCount<String>[] dataCounts,
+                                             BiConsumer<DataCount<String>[], Comparator<DataCount<String>>> sortingFunc) {
+        sortingFunc.accept(dataCounts, (count1, count2) -> count2.count - count1.count);
+
+        System.out.println("Ordered by Frequency:");
+        printWordCounts(dataCounts);
+
+        sortingFunc.accept(dataCounts, (count1, count2) -> count1.data.compareTo(count2.data));
+
+        System.out.println("\nOrdered Lexicographically:");
+        printWordCounts(dataCounts);
+    }
+
+    
+    private static void countUniqueWords(DataCount<String>[] dataCounts) {
+        System.out.println("Unique words: " + dataCounts.length);
+    }
+
+   
+    private static <E> void insertionSort(DataCount<E>[] dataCounts, Comparator<DataCount<E>> comparator) {
+        insertionSort(dataCounts, 0, dataCounts.length - 1, comparator);
+    }
+
+ 
+    private static <E> void insertionSort(DataCount<E>[] dataCounts,
+                                          int low, int high,
+                                          Comparator<DataCount<E>> comparator) {
+        for(int i = low + 1; i <= high; i++) {
+            DataCount<E> key = dataCounts[i];
+            int j = i - 1;
+            while(j >= 0 && comparator.compare(key, dataCounts[j]) < 0) {
+                dataCounts[j + 1] = dataCounts[j--];
+            }
+            dataCounts[j + 1] = key;
+        }
+    }
+
+  
+    private static <E> void quickSort(DataCount<E>[] dataCounts, Comparator<DataCount<E>> comparator) {
+        quickSort(dataCounts, 0, dataCounts.length - 1, comparator);
+    }
+
+    private static <E> void quickSort(DataCount<E>[] dataCounts,
+                                      int low, int high,
+                                      Comparator<DataCount<E>> comparator) {
+        if(high - low > QUICK_SORT_CUTOFF) {
+            int pivot = partition(dataCounts, low, high, comparator);
+            quickSort(dataCounts, low, pivot - 1, comparator);
+            quickSort(dataCounts, pivot + 1, high, comparator);
+        } else {
+            insertionSort(dataCounts, low, high, comparator);
+        }
+    }
+
+    private static <E> int partition(DataCount<E>[] dataCounts,
+                                     int low, int high,
+                                     Comparator<DataCount<E>> comparator) {
+        DataCount<E> pivotElement = dataCounts[low];
+        int i = low, j = high + 1;
+        while(true) {
+            while(comparator.compare(dataCounts[++i], pivotElement) < 0) if(i == high) break;
+            while(comparator.compare(pivotElement, dataCounts[--j]) < 0) if(j == low) break;
+            if(i >= j) break;
+            swap(dataCounts, i, j);
+        }
+        swap(dataCounts, low, j);
+        return j;
+    }
+
+    private static <E> void swap(DataCount<E>[] dataCounts, int i, int j) {
+        DataCount<E> temp = dataCounts[i];
+        dataCounts[i] = dataCounts[j];
+        dataCounts[j] = temp;
+    }
+
+    
+    private static <E> void mergeSort(DataCount<E>[] dataCounts, Comparator<DataCount<E>> comparator) {
+        if(dataCounts.length > 1) {
+            int mid = dataCounts.length / 2;
+            DataCount<E>[] left = Arrays.copyOfRange(dataCounts, 0, mid);
+            DataCount<E>[] right = Arrays.copyOfRange(dataCounts, mid, dataCounts.length);
+
+            mergeSort(left, comparator);
+            mergeSort(right, comparator);
+            merge(dataCounts, left, right, comparator);
+        }
+    }
+
+   
+    private static <E> void merge(DataCount<E>[] dataCounts,
+                                  DataCount<E>[] left, DataCount<E>[] right,
+                                  Comparator<DataCount<E>> comparator) {
+        int i = 0, j = 0;
+        for(int k = 0; k < dataCounts.length; k++) {
+            if(i < left.length && j < right.length) {
+                if(comparator.compare(left[i], right[j]) <= 0) {
+                    dataCounts[k] = left[i++];
+                } else {
+                    dataCounts[k] = right[j++];
+                }
+            } else if(i < left.length) {
+                dataCounts[k] = left[i++];
+            } else if(j < right.length) {
+                dataCounts[k] = right[j++];
+            }
+        }
+    }
+}
