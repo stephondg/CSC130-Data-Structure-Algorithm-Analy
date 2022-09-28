@@ -1,0 +1,28 @@
+/*Stephon Grace*/
+class DataCount<E> {
+    
+    E data;
+
+    
+    int count;
+
+   
+    DataCount(E data, int count) {
+        this.data = data;
+        this.count = count;
+    }
+    
+    public String toString()
+    {
+    	return data + ", count: " + count;
+    }
+}
+
+
+public interface DataCounter<E> {
+
+    public void incCount(E data);
+    public int getSize();
+    public DataCount<E>[] getCounts();
+
+}
